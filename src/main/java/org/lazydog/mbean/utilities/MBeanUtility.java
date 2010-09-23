@@ -2,11 +2,9 @@ package org.lazydog.mbean.utilities;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
+import java.util.ServiceLoader;
 import javax.management.InstanceNotFoundException;
-import javax.management.JMException;
 import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
 import javax.management.MBeanException;
@@ -27,6 +25,47 @@ public final class MBeanUtility {
     public static final String JMX_PORT_KEY = "org.lazydog.mbean.jmxPort";
     public static final String JMX_LOGIN_KEY = "org.lazydog.mbean.jmxLogin";
     public static final String JMX_PASSWORD_KEY = "org.lazydog.mbean.jmxPassword";
+
+    /**
+     * Create the MBean object.
+     *
+     * @param  interfaceClass  the MBean interface class.
+     *
+     * @return  the MBean object.
+     */
+    private static <T> T createObject(Class<T> interfaceClass) {
+
+        // Declare.
+        T object;
+        ServiceLoader<T> loader;
+
+        // Initialize.
+        object = null;
+        loader = ServiceLoader.load(interfaceClass);
+
+        // Loop through the services.
+        for (T loadedObject : loader) {
+
+            // Check if a factory has not been found.
+            if (object == null) {
+
+                // Set the factory.
+                object = loadedObject;
+            }
+            else {
+                throw new IllegalArgumentException(
+                    "More than one MBean object found.");
+            }
+        }
+
+        // Check if a object has not been found.
+        if (object == null) {
+            throw new IllegalArgumentException(
+                "No MBean object found.");
+        }
+
+        return object;
+    }
 
     /**
      * Get the MBean represented by the interface class.  The object name is
@@ -144,10 +183,13 @@ public final class MBeanUtility {
      *
      * @param  interfaceClass  the MBean interface class.
      *
+     * @return  the MBean object identifier (canonical object name.)
+     *
      * @throws  MBeanException  if unable to register the MBean.
      */
-    public static void register(Class interfaceClass) throws MBeanException {
-        register(interfaceClass, getObjectName(interfaceClass));
+    public static <T> String register(Class<T> interfaceClass)
+            throws MBeanException {
+        return register(interfaceClass, getObjectName(interfaceClass));
     }
 
     /**
@@ -156,10 +198,12 @@ public final class MBeanUtility {
      * @param  interfaceClass  the MBean interface class.
      * @param  objectName      the MBean object name.
      *
+     * @return  the MBean object identifier (canonical object name.)
+     *
      * @throws  IllegalArgumentException  if the interface class is invalid.
      * @throws  MBeanException            if unable to register the MBean.
      */
-    public static void register(Class interfaceClass, ObjectName objectName)
+    public static <T> String register(Class<T> interfaceClass, ObjectName objectName)
             throws MBeanException {
 
         // Check if the interface class is valid.
@@ -178,65 +222,40 @@ public final class MBeanUtility {
             // Check if the MBean is not registered with the MBean server.
             if (!mBeanServer.isRegistered(objectName)) {
 
+                // Declare.
+                ObjectInstance objectInstance;
+
                 // Register the MBean with the MBean server.
-                mBeanServer.createMBean(interfaceClass.getName(), objectName);
+                objectInstance = mBeanServer.registerMBean(createObject(interfaceClass), objectName);
+
+                // Get the object name for the registered MBean.
+                objectName = objectInstance.getObjectName();
             }
         }
-        catch(JMException e) {
-            // ReflectionException
-            // InstanceAlreadyExistsException
-            // MBeanRegistrationException
-            // MBeanException
-            // NotCompliantMBeanException
+        catch(Exception e) {
             throw new MBeanException(e, "Unable to register the MBean.");
         }
+
+        return objectName.getCanonicalName();
     }
 
     /**
-     * Unregister the MBean(s) represented by the interface class.
+     * Unregister the MBean represented by the object identifier (canonical object name.)
      *
-     * @param  interfaceClass  the MBean interface class.
+     * @param  objectID  the MBean object identifier (canonical object name.)
      *
-     * @throws  IllegalArgumentException  if the interface class is invalid.
-     * @throws  MBeanException            if unable to unregister the MBean(s).
+     * @throws  MBeanException  if unable to unregister the MBean.
      */
-    public static void unregister(Class interfaceClass) throws MBeanException {
+    public static void unregister(String objectID) throws MBeanException {
 
-        // Declare.
-        MBeanServer mBeanServer;
-        Set<ObjectInstance> objectInstances;
-        Set<ObjectName> objectNames;
-
-        // Check if the interface class is valid.
-        if (interfaceClass == null) {
-            throw new IllegalArgumentException("The interface class is invalid.");
-        }
-
-        // Initialize the object names.
-        objectNames = new HashSet<ObjectName>();
-
-        // Get the MBean server.
-        mBeanServer = ManagementFactory.getPlatformMBeanServer();
-
-        // Get the registered object instances (interface class names and object name pairs).
-        objectInstances = mBeanServer.queryMBeans(null, null);
-
-        // Loop through the object instances.
-        for (ObjectInstance objectInstance : objectInstances) {
-
-            // Check if the object instance has the interface class.
-            if (objectInstance.getClassName().equals(interfaceClass.getName())) {
-
-                // Add the object name to the set.
-                objectNames.add(objectInstance.getObjectName());
-            }
-        }
-
-        // Loop through the object names.
-        for (ObjectName objectName : objectNames) {
+        try {
 
             // Unregister the MBean.
-            unregister(objectName);
+            unregister(ObjectName.getInstance(objectID));
+        }
+        catch(MalformedObjectNameException e) {
+            throw new MBeanException(e,
+                    "Unable to unregister the MBean " + objectID + ".");
         }
     }
 
@@ -265,9 +284,9 @@ public final class MBeanUtility {
             }
         }
         catch(Exception e) {
-            // InstanceNotFoundException
-            // MBeanRegistrationException
-            throw new MBeanException(e, "Unable to unregister the MBean.");
+            throw new MBeanException(e, 
+                    "Unable to unregister the MBean " +
+                    objectName.getCanonicalName() + ".");
         }
     }
 
