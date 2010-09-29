@@ -1,4 +1,4 @@
-package org.lazydog.mbean.utilities;
+package org.lazydog.mbean.utility;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;

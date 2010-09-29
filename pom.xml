@@ -5,16 +5,16 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lazydog</groupId>
-    <artifactId>mbean-utilities</artifactId>
+    <artifactId>mbean-utility</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>MBean Utilities</name>
+    <name>MBean Utility</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <scm>
-        <connection>scm:svn:https://svn.home/svn/lazydog/trunk/mbean-utilities</connection>
-        <developerConnection>scm:svn:https://svn.home/svn/lazydog/trunk/mbean-utilities</developerConnection>
+        <connection>scm:svn:https://svn.home/svn/lazydog/trunk/mbean-utility</connection>
+        <developerConnection>scm:svn:https://svn.home/svn/lazydog/trunk/mbean-utility</developerConnection>
     </scm>
     <build>
         <pluginManagement>

@@ -1,4 +1,4 @@
-package org.lazydog.mbean.utilities;
+package org.lazydog.mbean.utility;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -228,14 +228,17 @@ public final class MBeanUtility {
     }
 
     /**
-     * Register the MBean represented by the interface class.  The object name 
-     * is set to the object name returned by the getObjectName method.
+     * Register the MBean represented by the interface class.  The MBean object
+     * name is set to the object name returned by the
+     * getObjectName(Class interfaceClass) method.
      *
      * @param  interfaceClass  the MBean interface class.
      *
      * @return  the MBean object name.
      *
-     * @throws  MBeanException  if unable to register the MBean.
+     * @throws  IllegalArgumentException  if the interface class is invalid or
+     *                                    unable to get the MBean object name.
+     * @throws  MBeanException            if unable to register the MBean.
      */
     public static <T> ObjectName register(Class<T> interfaceClass)
             throws MBeanException {
@@ -243,7 +246,47 @@ public final class MBeanUtility {
     }
 
     /**
-     * Register the MBean represented by the interface class and object name.
+     * Register the MBean represented by the interface class.  The MBean object 
+     * name is set to the object name returned by the 
+     * getObjectName(Class interfaceClass, String key, String value) method.
+     *
+     * @param  interfaceClass  the MBean interface class.
+     * @param  key             the property key.
+     * @param  value           the property value.
+     *
+     * @return  the MBean object name.
+     *
+     * @throws  IllegalArgumentException  if the interface class is invalid or
+     *                                    unable to get the MBean object name.
+     * @throws  MBeanException            if unable to register the MBean.
+     */
+    public static <T> ObjectName register(Class<T> interfaceClass, String key, String value)
+            throws MBeanException {
+        return register(interfaceClass, getObjectName(interfaceClass, key, value));
+    }
+
+    /**
+     * Register the MBean represented by the interface class.  The MBean object
+     * name is set to the object name returned by the
+     * getObjectName(Class interfaceClass, Hashtable<String,String> table)
+     * method.
+     *
+     * @param  interfaceClass  the MBean interface class.
+     * @param  table           the properties table.
+     *
+     * @return  the MBean object name.
+     *
+     * @throws  IllegalArgumentException  if the interface class is invalid or
+     *                                    unable to get the MBean object name.
+     * @throws  MBeanException            if unable to register the MBean.
+     */
+    public static <T> ObjectName register(Class<T> interfaceClass, Hashtable<String,String> table)
+            throws MBeanException {
+        return register(interfaceClass, getObjectName(interfaceClass, table));
+    }
+
+    /**
+     * Register the MBean represented by the interface class.
      *
      * @param  interfaceClass  the MBean interface class.
      * @param  objectName      the MBean object name.
