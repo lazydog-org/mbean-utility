@@ -2,6 +2,7 @@ package org.lazydog.mbean.utilities;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import javax.management.InstanceNotFoundException;
@@ -119,7 +120,7 @@ public final class MBeanUtility {
      */
     public static <T> T getMBean(Class<T> interfaceClass,
             Properties environment) throws MBeanException {
-        return getMBean(interfaceClass, getObjectName(interfaceClass));
+        return getMBean(interfaceClass, getObjectName(interfaceClass), environment);
     }
 
     /**
@@ -152,6 +153,45 @@ public final class MBeanUtility {
      *                                    unable to get the MBean object name.
      */
     public static ObjectName getObjectName(Class interfaceClass) {
+        return getObjectName(interfaceClass, null);
+    }
+
+    /**
+     * Get the MBean object name.
+     *
+     * @param  interfaceClass  the MBean interface class.
+     * @param  key             the property key.
+     * @param  value           the property value.
+     *
+     * @return  the MBean object name.
+     *
+     * @throws  IllegalArgumentException  if the interface class is invalid or
+     *                                    unable to get the MBean object name.
+     */
+    public static ObjectName getObjectName(Class interfaceClass, String key, String value) {
+
+        // Declare.
+        Hashtable<String,String> table;
+
+        // Set the table.
+        table = new Hashtable<String,String>();
+        table.put(key, value);
+
+        return getObjectName(interfaceClass, table);
+    }
+
+    /**
+     * Get the MBean object name.
+     *
+     * @param  interfaceClass  the MBean interface class.
+     * @param  table           the properties table.
+     *
+     * @return  the MBean object name.
+     *
+     * @throws  IllegalArgumentException  if the interface class is invalid or
+     *                                    unable to get the MBean object name.
+     */
+    public static ObjectName getObjectName(Class interfaceClass, Hashtable<String,String> table) {
 
         // Declare.
         ObjectName objectName;
@@ -163,10 +203,20 @@ public final class MBeanUtility {
 
         try {
 
+            // Check if the table is null.
+            if (table == null) {
+
+                // Initialize the table.
+                table = new Hashtable<String,String>();
+            }
+
+            // Add the "type" to the table.
+            table.put("type", interfaceClass.getSimpleName());
+
+            // Get the MBean object name.
             objectName = ObjectName.getInstance(
                     interfaceClass.getPackage().getName(),
-                    "type",
-                    interfaceClass.getSimpleName());
+                    table);
         }
         catch(MalformedObjectNameException e) {
             throw new IllegalArgumentException(
@@ -183,11 +233,11 @@ public final class MBeanUtility {
      *
      * @param  interfaceClass  the MBean interface class.
      *
-     * @return  the MBean object identifier (canonical object name.)
+     * @return  the MBean object name.
      *
      * @throws  MBeanException  if unable to register the MBean.
      */
-    public static <T> String register(Class<T> interfaceClass)
+    public static <T> ObjectName register(Class<T> interfaceClass)
             throws MBeanException {
         return register(interfaceClass, getObjectName(interfaceClass));
     }
@@ -198,12 +248,12 @@ public final class MBeanUtility {
      * @param  interfaceClass  the MBean interface class.
      * @param  objectName      the MBean object name.
      *
-     * @return  the MBean object identifier (canonical object name.)
+     * @return  the MBean object name.
      *
      * @throws  IllegalArgumentException  if the interface class is invalid.
      * @throws  MBeanException            if unable to register the MBean.
      */
-    public static <T> String register(Class<T> interfaceClass, ObjectName objectName)
+    public static <T> ObjectName register(Class<T> interfaceClass, ObjectName objectName)
             throws MBeanException {
 
         // Check if the interface class is valid.
@@ -236,27 +286,7 @@ public final class MBeanUtility {
             throw new MBeanException(e, "Unable to register the MBean.");
         }
 
-        return objectName.getCanonicalName();
-    }
-
-    /**
-     * Unregister the MBean represented by the object identifier (canonical object name.)
-     *
-     * @param  objectID  the MBean object identifier (canonical object name.)
-     *
-     * @throws  MBeanException  if unable to unregister the MBean.
-     */
-    public static void unregister(String objectID) throws MBeanException {
-
-        try {
-
-            // Unregister the MBean.
-            unregister(ObjectName.getInstance(objectID));
-        }
-        catch(MalformedObjectNameException e) {
-            throw new MBeanException(e,
-                    "Unable to unregister the MBean " + objectID + ".");
-        }
+        return objectName;
     }
 
     /**
