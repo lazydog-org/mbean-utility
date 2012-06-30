@@ -40,9 +40,7 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
      * @param  login           the JMX login.
      * @param  password        the JMX password;
      */
-    private RemoteMBeanInvocationHandler(Class<T> interfaceClass, 
-            ObjectName objectName, String host, String port, String login,
-            String password) {
+    private RemoteMBeanInvocationHandler(Class<T> interfaceClass, ObjectName objectName, String host, String port, String login, String password) {
         this.interfaceClass = interfaceClass;
         this.objectName = objectName;
         this.host = host;
@@ -67,7 +65,7 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
                 connector.close();
             }
         }
-        catch(IOException e) {
+        catch (IOException e) {
             // Ignore.
         }
     }
@@ -84,22 +82,10 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
      *
      * @throws  IOException  if unable to connect to the JMX service.
      */
-    private static JMXConnector connect(String host, String port,
-            String login, String password) throws IOException {
-
-        // Declare.
-        JMXConnector connector;
-        Map<String,Object> serviceEnv;
-        JMXServiceURL serviceUrl;
-
-        // Set the service environment.
-        serviceEnv = new HashMap<String,Object>();
-        serviceEnv.put(
-                "jmx.remote.credentials",
-                new String[]{login, password});
+    private static JMXConnector connect(String host, String port, String login, String password) throws IOException {
 
         // Set the service URL.
-        serviceUrl = new JMXServiceURL(
+        JMXServiceURL serviceUrl = new JMXServiceURL(
                 new StringBuffer()
                     .append("service:jmx:rmi://")
                     .append(host)
@@ -112,10 +98,12 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
                     .append("/jmxrmi")
                     .toString());
 
-        // Connect to the JMX service.
-        connector = JMXConnectorFactory.connect(serviceUrl, serviceEnv);
+        // Set the service environment.
+        Map<String,Object> serviceEnv = new HashMap<String,Object>();
+        serviceEnv.put("jmx.remote.credentials", new String[]{login, password});
 
-        return connector;
+        // Connect to the JMX service.
+        return JMXConnectorFactory.connect(serviceUrl, serviceEnv);
     }
 
     /**
@@ -130,40 +118,29 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
      * @throws  MBeanException  if unable to get the MBean.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getMBean(Class<T> interfaceClass, ObjectName objectName, 
-            Properties environment) throws MBeanException {
-
-        // Declare.
-        JMXConnector connector;
-        String host;
-        String port;
-        String login;
-        String password;
+    public static <T> T getMBean(Class<T> interfaceClass, ObjectName objectName, Properties environment) throws MBeanException {
 
         // Initialize.
-        connector = null;
+        JMXConnector connector = null;
 
         // Get the JMX environment properties.
-        host = getProperty(environment, MBeanUtility.JMX_HOST_KEY);
-        port = getProperty(environment, MBeanUtility.JMX_PORT_KEY);
-        login = getProperty(environment, MBeanUtility.JMX_LOGIN_KEY);
-        password = getProperty(environment, MBeanUtility.JMX_PASSWORD_KEY);
+        String host = getProperty(environment, MBeanUtility.JMX_HOST_KEY);
+        String port = getProperty(environment, MBeanUtility.JMX_PORT_KEY);
+        String login = getProperty(environment, MBeanUtility.JMX_LOGIN_KEY);
+        String password = getProperty(environment, MBeanUtility.JMX_PASSWORD_KEY);
 
         try {
-
-            // Declare.
-            MBeanServerConnection mBeanServerConnection;
 
             // Connect to the JMX service.
             connector = connect(host, port, login, password);
 
             // Connect to the MBean server.
-            mBeanServerConnection = connector.getMBeanServerConnection();
+            MBeanServerConnection mBeanServerConnection = connector.getMBeanServerConnection();
 
             // Validate the MBean.
             MBeanUtility.validateMBean(interfaceClass, objectName, mBeanServerConnection);
         }
-        catch(IOException e) {
+        catch (IOException e) {
             throw new MBeanException(e,
                     "Unable to create the MBean represented by the interface class " +
                     interfaceClass.getName() + " and object name " +
@@ -177,8 +154,7 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
         return (T)Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),
                 new Class[]{interfaceClass},
-                new RemoteMBeanInvocationHandler<T>(interfaceClass, objectName,
-                host, port, login, password));
+                new RemoteMBeanInvocationHandler<T>(interfaceClass, objectName, host, port, login, password));
     }
 
     /**
@@ -215,24 +191,17 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        // Declare.
-        JMXConnector connector;
-        T object;
-        Object result;
-
         // Initialize.
-        connector = null;
+        JMXConnector connector = null;
+        Object result;
 
         try {
 
             // Connect to the JMX service.
-            connector = connect(host, port, login, password);
+            connector = connect(this.host, this.port, this.login, this.password);
 
             // Create the MBean.
-            object = JMX.newMXBeanProxy(
-                    connector.getMBeanServerConnection(),
-                    objectName,
-                    interfaceClass);
+            T object = JMX.newMXBeanProxy(connector.getMBeanServerConnection(), this.objectName, this.interfaceClass);
 
             // Invoke a method on the MBean.
             result = method.invoke(object, args);
