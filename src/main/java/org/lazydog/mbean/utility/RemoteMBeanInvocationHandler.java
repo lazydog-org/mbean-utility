@@ -1,3 +1,21 @@
+/**
+ * Copyright 2010-2013 lazydog.org.
+ *
+ * This file is part of repository.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.lazydog.mbean.utility;
 
 import java.io.IOException;
@@ -14,7 +32,6 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-
 
 /**
  * Remote MBean invocation handler.
@@ -64,8 +81,7 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
                 // Close the connection to the JMX service.
                 connector.close();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             // Ignore.
         }
     }
@@ -120,7 +136,6 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
     @SuppressWarnings("unchecked")
     public static <T> T getMBean(Class<T> interfaceClass, ObjectName objectName, Properties environment) throws MBeanException {
 
-        // Initialize.
         JMXConnector connector = null;
 
         // Get the JMX environment properties.
@@ -139,14 +154,12 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
 
             // Validate the MBean.
             MBeanUtility.validateMBean(interfaceClass, objectName, mBeanServerConnection);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new MBeanException(e,
                     "Unable to create the MBean represented by the interface class " +
                     interfaceClass.getName() + " and object name " +
                     objectName.getCanonicalName() + ".");
-        }
-        finally {
+        } finally {
             close(connector);
         }
 
@@ -191,10 +204,9 @@ public class RemoteMBeanInvocationHandler<T> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        // Initialize.
-        JMXConnector connector = null;
         Object result;
-
+        JMXConnector connector = null;
+        
         try {
 
             // Connect to the JMX service.
