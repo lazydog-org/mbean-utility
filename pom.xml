@@ -27,7 +27,7 @@
     <groupId>org.lazydog.mbean</groupId>
     <artifactId>mbean-utility</artifactId>
     <packaging>jar</packaging>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
     <name>MBean Utility</name>
     <description>The MBean utility is helper code for registering/unregistering JMX MBeans.</description>
     <url>http://www.lazydog.org</url>
@@ -58,7 +58,8 @@
         <connection>scm:git:git@github.com:lazydog-org/mbean-utility.git</connection>
         <developerConnection>scm:git:git@github.com:lazydog-org/mbean-utility.git</developerConnection>
         <url>git@github.com:lazydog-org/mbean-utility.git</url>
-    </scm>
+      <tag>v1.2</tag>
+  </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
